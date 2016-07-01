@@ -1,5 +1,4 @@
 from flask import Flask, render_template
-import sys
 import json
 import networkx as nx
 import urllib
