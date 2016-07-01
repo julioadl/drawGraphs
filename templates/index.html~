@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+  .node {
+    stroke: #fff;
+    stroke-width: 1.5px;
+  }
+
+  .link {
+    stroke: #999;
+    stroke-opacity: .6;
+  }
+</style>
+
+<body>
+</body>
+  <script src="http://d3js.org/d3.v2.js"></script>
+  <script>
+
+    var width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+
+    var height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+    var color = d3.scale.category20();
+
+    var force = d3.layout.force()
+      .charge(-50)
+      .linkDistance(30)
+      .gravity(0.5)
+      .size([width, height]);
+
+    var max_nodes = 100,
+        gravity = 0.4;
+
+    var svg = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    d3.json("/data", function(graph) {
+
+      var nodes = force.nodes(graph.nodes),
+          links = force.links(),
+          node = svg.selectAll(".node");
+        
+      var linksArray = graph.links;
+
+      var node = node
+        .data(graph.nodes)
+        .enter().insert("circle")
+        .attr("class", "node")
+        .attr("r", 3)
+        .call(force.drag)
+        .style("fill", function(d) {
+          return d.color;
+          });
+
+      force.on("tick", function() {
+        node.attr("cx", function(d) {
+          return d.x;
+          })
+          .attr("cy", function(d) {
+          return d.y;
+          }); 
+        }); 
+
+      force.start();
+
+      svg.on("click", function(d) {
+        diffusion();
+        remove = remove + 1;
+      });
+
+    function diffusion() {
+        for (i = 0; i < max_nodes; i++) {
+          links.push(linksArray[i])
+        };
+
+          var link = svg.selectAll(".link")
+            .data(links)
+            .enter().insert("line")
+            .attr("class", "link")
+            .style("stroke-width", function(d) {
+              return Math.sqrt(d.value);
+            });
+
+
+          force.on("tick", function() {
+
+           node.attr("cx", function(d) {
+              return d.x;
+            })
+            .attr("cy", function(d) {
+              return d.y;
+            });
+
+            link
+              .attr("x1", function(d) {
+                return d.source.x;
+              })
+              .attr("y1", function(d) {
+                return d.source.y;
+              })
+              .attr("x2", function(d) {
+                return d.target.x;
+              })
+              .attr("y2", function(d) {
+                return d.target.y;
+              })
+            });
+
+          force
+            .gravity(gravity)
+            .start();
+
+          max_nodes = max_nodes + 100;
+          gravity = gravity - 0.1;
+
+          setTimeout(function() {
+            link.remove()
+          }, 2500);
+
+    };
+
+    });
+
+  </script>

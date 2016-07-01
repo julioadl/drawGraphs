@@ -1,88 +1,150 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
-  .node {
-    stroke: #fff;
-    stroke-width: 1.5px;
-  }
+    .node {
+        stroke: #090808;
+        stroke-width: 1.5px;
+    }
 
-  .link {
-    stroke: #999;
-    stroke-opacity: .6;
-  }
+    .link {
+        stroke: #090808;
+        stroke-opacity: .6;
+    }
 </style>
 
-<body>
+<body style="background-color:#000000">
 </body>
-  <script src="http://d3js.org/d3.v2.js"></script>
-  <script>
-
+<script src="http://d3js.org/d3.v3.js"></script>
+<script>
     var width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 
     var height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
-    var color = d3.scale.category20();
+    var colorLeave = d3.interpolateLab("#4c4cff", "#e5e5ff");
+
+    var colorRemain = d3.interpolateLab("#666600", "#ffff00");
+
+    var repetitions = 0;
 
     var force = d3.layout.force()
-      .charge(-120)
-      .linkDistance(30)
-      .size([width, height]);
+        .charge(-50)
+        .linkDistance(50)
+        .gravity(0.5)
+        .size([width, height]);
+
+    var drag = force.drag()
+        .on("dragstart", dragstart);;
+
+    var max_nodes = 500,
+        gravity = 0.4;
 
     var svg = d3.select("body").append("svg")
-      .attr("width", width)
-      .attr("height", height);
+        .attr("width", width)
+        .attr("height", height);
 
     d3.json("/data", function(graph) {
 
-      force
-          .nodes(graph.nodes)
-          .links(graph.links)
-          .start();
+        var nodes = force.nodes(graph.nodes),
+            links = force.links(),
+            node = svg.selectAll(".node");
 
-      var link = svg.selectAll(".link")
-        .data(graph.links)
-        .enter().append("line")
-        .attr("class", "link")
-        .style("stroke-width", function(d) {
-          return Math.sqrt(d.value);
+        var linksArray = graph.links;
+
+        var node = node
+            .data(graph.nodes)
+            .enter().insert("circle")
+            .attr("class", "node")
+            .attr("r", function(d) {
+                return d.logFollowers;
+            })
+            .call(drag)
+            .style("fill", function(d) {
+                return d.color;
+            });
+
+        node.append("title")
+            .text(function(d) {
+                return "Username: " + d.name + "\nFollowers:" + d.followers;
+            });
+
+        force.on("tick", function() {
+            node.attr("cx", function(d) {
+                    return d.x;
+                })
+                .attr("cy", function(d) {
+                    return d.y;
+                });
         });
 
-      var node = svg.selectAll(".node")
-        .data(graph.nodes)
-        .enter().append("circle")
-        .attr("class", "node")
-        .attr("r", 5)
-        .style("fill", function(d) {
-          return color(d.name);
-        })
-        .call(force.drag);
+        force.start();
 
-      node
-        .append("title")
-          .text(function(d) {
-            return d.name;
-          });
+        var timer = setInterval(diffusion, 7500);
 
-      force.on("tick", function() {
-        link.attr("x1", function(d) {
-            return d.source.x;
-          })
-          .attr("y1", function(d) {
-            return d.source.y;
-          })
-          .attr("x2", function(d) {
-            return d.target.x;
-          })
-          .attr("y2", function(d) {
-            return d.target.y;
-          });
+        function diffusion() {
+            for (i = 0; i < max_nodes; i++) {
+                links.push(linksArray[i])
+            };
 
-        node.attr("cx", function(d) {
-            return d.x;
-          })
-          .attr("cy", function(d) {
-            return d.y;
-          });
-      });
+            var link = svg.selectAll(".link")
+                .data(links)
+                .enter().insert("line")
+                .attr("class", "link")
+                .style("stroke-width", function(d) {
+                    return Math.sqrt(d.value);
+                })
+                .style("stroke", function(d) {
+                    return d.color;
+                });
+
+
+            force.on("tick", function() {
+
+                node.attr("cx", function(d) {
+                        return d.x;
+                    })
+                    .attr("cy", function(d) {
+                        return d.y;
+                    });
+
+                link
+                    .attr("x1", function(d) {
+                        return d.source.x;
+                    })
+                    .attr("y1", function(d) {
+                        return d.source.y;
+                    })
+                    .attr("x2", function(d) {
+                        return d.target.x;
+                    })
+                    .attr("y2", function(d) {
+                        return d.target.y;
+                    })
+            });
+
+            force
+                .gravity(gravity)
+                .start();
+            console.log(links.length)
+            max_nodes = max_nodes + 500;
+            gravity = gravity - 0.115;
+
+            if (gravity > 0) {
+                setTimeout(function() {
+                    link.remove()
+                }, 7500)
+            };
+
+            repetitions = repetitions + 1;
+
+            if (repetitions > 3) {
+                clearInterval(timer)
+            }
+
+        };
+
     });
-  </script>
+
+    function dragstart(d) {
+        d3.select(this).classed("fixed", d.fixed = true);
+    }
+</script>
