@@ -24,7 +24,7 @@
 
     var colorRemain = d3.interpolateLab("#666600", "#ffff00");
 
-    var repetitions = 0;
+    var repetitions = {{ repetitions }};
 
     var force = d3.layout.force()
         .charge(-50)
@@ -36,7 +36,7 @@
         .on("dragstart", dragstart);;
 
     var max_nodes = 500,
-        gravity = 0.4;
+        gravity = {{ gravity }};
 
     var svg = d3.select("body").append("svg")
         .attr("width", width)
@@ -131,6 +131,7 @@
             if (gravity > 0) {
                 setTimeout(function() {
                     link.remove()
+                    clearInterval(timer)
                 }, 7500)
             };
 

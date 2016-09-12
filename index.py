@@ -5,9 +5,23 @@ import urllib
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route('/one')
+def one():
+    gravity = 0
+    repetitions = 4
+    return render_template('index.html', gravity = gravity, repetitions = repetitions)
+
+@app.route('/two')
+def two():
+    gravity = 0.1
+    repetitions = 4
+    return render_template('index.html', gravity = gravity, repetitions = repetitions)
+
+@app.route('/three')
+def three():
+    gravity = 0.4
+    repetitions = 0
+    return render_template('index.html', gravity = gravity, repetitions = repetitions)
 
 @app.route('/data')
 def graph_to_json():
