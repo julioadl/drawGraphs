@@ -7,14 +7,14 @@ app = Flask(__name__)
 
 @app.route('/one')
 def one():
-    gravity = 0
+    gravity = 0.2
     repetitions = 4
     return render_template('index.html', gravity = gravity, repetitions = repetitions)
 
 @app.route('/two')
 def two():
     gravity = 0.1
-    repetitions = 4
+    repetitions = 3
     return render_template('index.html', gravity = gravity, repetitions = repetitions)
 
 @app.route('/three')
